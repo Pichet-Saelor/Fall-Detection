@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <WiFiClientSecure.h>
 
 // ===== ตั้งค่าตรงนี้ =====
 const char* WIFI_SSID     = "zeitlram_2.4G";
@@ -20,10 +21,25 @@ const char* TOPIC_SENSOR  = "fall_detection/data";
 const char* TOPIC_ALERT   = "fall/alert";
 // =========================
 
-#include <WiFiClientSecure.h>
+const float FALL_THRESHOLD = 4.5; // G (แรงกระแทก)
+const float STILL_THRESHOLD = 1.8; // นิ่ง (หลังล้ม)
+const int   STILL_COUNT_MAX = 15;
+
 Adafruit_MPU6050 mpu;
 WiFiClientSecure wifiClient;
 PubSubClient mqtt(wifiClient);
+
+int stillCount = 0;
+bool highGSeen = false;
+
+void connectWiFi() {
+  Serial.print("Connecting to WiFi");
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500); Serial.print(".");
+  }
+  Serial.println("\nWiFi Connected! IP: " + WiFi.localIP().toString());
+}
 
 void connectMQTT() {
   wifiClient.setInsecure(); // สำหรับ HiveMQ Cloud แบบเริ่มต้น

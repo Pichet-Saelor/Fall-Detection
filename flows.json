@@ -20,6 +20,8 @@
         "keepalive": 60,
         "cleansession": true,
         "autoUnsubscribe": true,
+        "user": "iotproject",
+        "password": "Admin123",
         "birthTopic": "",
         "birthQos": "0",
         "birthRetain": "false",
@@ -158,7 +160,7 @@
         "id": "76ed1387998d786d",
         "type": "inject",
         "z": "024bdd6db9e35d5f",
-        "name": "",
+        "name": "Test Fall",
         "props": [
             {
                 "p": "payload"
@@ -172,14 +174,13 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "topic": "",
+        "topic": "fall/alert",
         "payload": "{\"fall\":true}",
         "payloadType": "json",
-        "x": 600,
-        "y": 180,
+        "x": 160,
+        "y": 140,
         "wires": [
             [
-                "894ad3e84723d4cd",
                 "34fdad8ecf8e4cd6"
             ]
         ]
@@ -206,7 +207,7 @@
         "id": "9bc84d3dedc2abc8",
         "type": "mqtt in",
         "z": "024bdd6db9e35d5f",
-        "name": "",
+        "name": "Receive Fall",
         "topic": "fall/alert",
         "qos": "2",
         "datatype": "auto-detect",
@@ -215,8 +216,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 230,
-        "y": 320,
+        "x": 170,
+        "y": 200,
         "wires": [
             [
                 "34fdad8ecf8e4cd6"
@@ -227,16 +228,16 @@
         "id": "34fdad8ecf8e4cd6",
         "type": "function",
         "z": "024bdd6db9e35d5f",
-        "name": "function 1",
-        "func": "var token = \"24pP//+vgxlCJdqbPcqseZr24MspRs8ZVE64gVIycc3YkGAgihIpfUQCdytS8yntloYAAr//oBNZjLOo4QIltOaDqlaRHugEXO7DK8+Ehtwqy/V32QrINwAx8B/NNLde9I2nLlv7mFdMs5zWKYduoAdB04t89/1O/w1cDnyilFU=\";\nvar userId = \"U49b60c0e190f3d2a0c5dfd1d13b2d6a4\";\n\nmsg.url = \"https://api.line.me/v2/bot/message/push\";\nmsg.method = \"POST\";\nmsg.headers = {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer \" + token\n};\nmsg.payload = {\n    \"to\": userId,\n    \"messages\": [{\n        \"type\": \"text\",\n        \"text\": \"🚨 ตรวจพบการล้ม! กรุณาตรวจสอบผู้สูงอายุด่วน!\"\n    }]\n};\nreturn msg;",
+        "name": "Format LINE Message",
+        "func": "var token = \"24pP//+vgxlCJdqbPcqseZr24MspRs8ZVE64gVIycc3YkGAgihIpfUQCdytS8yntloYAAr//oBNZjLOo4QIltOaDqlaRHugEXO7DK8+Ehtwqy/V32QrINwAx8B/NNLde9I2nLlv7mFdMs5zWKYduoAdB04t89/1O/w1cDnyilFU=\";\nvar userId = \"U49b60c0e190f3d2a0c5dfd1d13b2d6a4\";\n\nvar message = \"🚨 ตรวจพบการล้ม! กรุณาตรวจสอบผู้สูงอายุด่วน!\";\n\n// ถ้าเป็น Topic Emergency\nif (msg.topic === \"fall/emergency\") {\n    message = \"🆘 กดปุ่มฉุกเฉิน! ต้องการความช่วยเหลือด่วน!\";\n}\n\nmsg.url = \"https://api.line.me/v2/bot/message/push\";\nmsg.method = \"POST\";\nmsg.headers = {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer \" + token\n};\nmsg.payload = {\n    \"to\": userId,\n    \"messages\": [{\n        \"type\": \"text\",\n        \"text\": message\n    }]\n};\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 440,
-        "y": 320,
+        "x": 480,
+        "y": 260,
         "wires": [
             [
                 "f5b7e30b2276baa2"
@@ -259,8 +260,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 630,
-        "y": 340,
+        "x": 670,
+        "y": 260,
         "wires": [
             [
                 "02856c68fe0699b2"
@@ -279,8 +280,58 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 780,
-        "y": 340,
+        "x": 820,
+        "y": 260,
         "wires": []
+    },
+    {
+        "id": "0676443c9b74070a",
+        "type": "mqtt in",
+        "z": "024bdd6db9e35d5f",
+        "name": "Receive SOS",
+        "topic": "fall/emergency",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "544766541f685886",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 260,
+        "wires": [
+            [
+                "34fdad8ecf8e4cd6"
+            ]
+        ]
+    },
+    {
+        "id": "18c0c98f86057088",
+        "type": "inject",
+        "z": "024bdd6db9e35d5f",
+        "name": "Test SOS",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "fall/emergency",
+        "payload": "{\"emergency\":true}",
+        "payloadType": "json",
+        "x": 160,
+        "y": 320,
+        "wires": [
+            [
+                "34fdad8ecf8e4cd6"
+            ]
+        ]
     }
 ]
