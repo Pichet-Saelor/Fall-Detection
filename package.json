@@ -7,6 +7,6 @@
     "node-red-dashboard": "latest"
   },
   "scripts": {
-    "start": "node-red --settings settings.js"
+    "start": "node init.js && node-red --settings settings.js"
   }
 }

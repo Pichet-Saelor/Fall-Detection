@@ -20,8 +20,6 @@
         "keepalive": 60,
         "cleansession": true,
         "autoUnsubscribe": true,
-        "user": "${MQTT_USER}",
-        "password": "${MQTT_PASS}",
         "birthTopic": "",
         "birthQos": "0",
         "birthRetain": "false",
