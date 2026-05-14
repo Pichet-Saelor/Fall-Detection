@@ -612,11 +612,11 @@ function playBeep(freq, duration, volume) {
 }
 
 function playAlarmSound() {
-  // เสียงสัญญาณฉุกเฉิน: สลับเสียงสูง-ต่ำ
-  playBeep(880, 0.3, 0.6);
-  setTimeout(() => playBeep(660, 0.3, 0.6), 350);
-  setTimeout(() => playBeep(880, 0.3, 0.6), 700);
-  setTimeout(() => playBeep(660, 0.3, 0.6), 1050);
+  // เสียงสัญญาณฉุกเฉิน: สลับเสียงสูง-ต่ำ (ปรับระดับเสียงเป็น 0.1 เพื่อให้เบาลง)
+  playBeep(880, 0.3, 0.1);
+  setTimeout(() => playBeep(660, 0.3, 0.1), 350);
+  setTimeout(() => playBeep(880, 0.3, 0.1), 700);
+  setTimeout(() => playBeep(660, 0.3, 0.1), 1050);
 }
 
 function startAlarm() {
