@@ -1,0 +1,12 @@
+{
+  "name": "node-red-fall-detection",
+  "description": "Node-RED for Fall Detection on Render",
+  "version": "1.0.0",
+  "dependencies": {
+    "node-red": "latest",
+    "node-red-dashboard": "latest"
+  },
+  "scripts": {
+    "start": "node-red --userDir . flows.json"
+  }
+}

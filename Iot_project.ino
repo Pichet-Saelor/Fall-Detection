@@ -1,0 +1,126 @@
+#include <Wire.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+
+// ===== ตั้งค่าตรงนี้ =====
+const char* WIFI_SSID     = "zeitlram_2.4G";
+const char* WIFI_PASSWORD = "Zeitlram2547";
+
+// แนะนำ: ใช้ "broker.hivemq.com" เพื่อให้เข้าถึงได้ผ่านอินเทอร์เน็ต
+const char* MQTT_SERVER   = "broker.hivemq.com"; 
+const int   MQTT_PORT     = 1883;
+
+// Topic ต้องตรงกับ Node สีม่วงใน Node-RED
+const char* TOPIC_SENSOR  = "fall_detection/data"; 
+const char* TOPIC_ALERT   = "fall/alert";
+// =========================
+
+const float FALL_THRESHOLD = 4.5; // G (แรงกระแทก)
+const float STILL_THRESHOLD = 1.8; // นิ่ง (หลังล้ม)
+const int   STILL_COUNT_MAX = 15;
+
+Adafruit_MPU6050 mpu;
+WiFiClient wifiClient;
+PubSubClient mqtt(wifiClient);
+
+int stillCount = 0;
+bool highGSeen = false;
+
+void connectWiFi() {
+  Serial.print("Connecting to WiFi");
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500); Serial.print(".");
+  }
+  Serial.println("\nWiFi Connected! IP: " + WiFi.localIP().toString());
+}
+
+void connectMQTT() {
+  while (!mqtt.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // สร้าง ClientID แบบสุ่มเพื่อไม่ให้ซ้ำกับตัวอื่น
+    String clientId = "ESP32_Fall-";
+    clientId += String(random(0xffff), HEX);
+    
+    if (mqtt.connect(clientId.c_str())) {
+      Serial.println("connected");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqtt.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  
+  if (!mpu.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) delay(10);
+  }
+  
+  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  Serial.println("MPU6050 Initialized!");
+
+  connectWiFi();
+  mqtt.setServer(MQTT_SERVER, MQTT_PORT);
+}
+
+void loop() {
+  if (!mqtt.connected()) {
+    connectMQTT();
+  }
+  mqtt.loop();
+
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+
+  float ax = a.acceleration.x;
+  float ay = a.acceleration.y;
+  float az = a.acceleration.z;
+  
+  // คำนวณแรงลัพธ์ (Resultant Force)
+  float gForce = sqrt(ax*ax + ay*ay + az*az) / 9.80665;
+
+  // --- Logic ตรวจจับการล้ม ---
+  if (gForce > FALL_THRESHOLD) {
+    highGSeen = true;
+    stillCount = 0;
+    Serial.println("⚠ High G detected: " + String(gForce));
+  } 
+  
+  if (highGSeen) {
+    if (gForce < STILL_THRESHOLD) {
+      stillCount++;
+      if (stillCount >= STILL_COUNT_MAX) {
+        // แจ้งเตือนเมื่อล้มแล้วนิ่ง
+        mqtt.publish(TOPIC_ALERT, "{\"fall\":true}");
+        Serial.println("🚨 FALL CONFIRMED!");
+        highGSeen = false;
+        stillCount = 0;
+      }
+    } else if (gForce > 1.5) { // ถ้ากลับมาเคลื่อนไหวแรงๆ ให้ยกเลิกการตรวจจับนิ่ง
+       // stillCount = 0; 
+    }
+  }
+
+  // --- ส่งค่าไป Node-RED Dashboard ---
+  StaticJsonDocument<200> doc;
+  
+  doc["x"] = ax;
+  doc["y"] = ay;
+  doc["z"] = az;
+  doc["g"]  = gForce;
+
+  char buf[256];
+  serializeJson(doc, buf);
+  mqtt.publish(TOPIC_SENSOR, buf);
+
+  delay(100); 
+}
