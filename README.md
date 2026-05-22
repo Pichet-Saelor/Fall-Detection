@@ -75,4 +75,3 @@
 - `settings.js`: การตั้งค่า Node-RED
 - `init.js`: สคริปต์สำหรับสร้างไฟล์ Credentials อัตโนมัติ
 - `public/`: ไฟล์เว็บส่วนหน้า (Static Assets)
-- `fall_detection_dashboard.html`: แดชบอร์ดแบบ Standalone (สามารถเปิดใช้งานแยกได้โดยไม่ต้องรัน Node-RED)
